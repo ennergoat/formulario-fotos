@@ -384,10 +384,12 @@
             <button class="action-btn zip-btn" id="generateZipBtn" disabled>
                 <i class="fas fa-file-archive"></i> Descargar ZIP
             </button>
-            <!-- NUEVO BOTÓN DE WHATSAPP -->
+
             <button class="action-btn whatsapp-btn" id="shareWhatsAppBtn" disabled>
-                <i class="fab fa-whatsapp"></i> Compartir por WhatsApp
+                <i class="fab fa-whatsapp"></i> Enviar por WhatsApp
             </button>
+
+
             <button class="action-btn clear-btn" id="clearBtn">
                 <i class="fas fa-broom"></i> Limpiar
             </button>
@@ -860,8 +862,7 @@
         // }
 
 
-
-        // NUEVA FUNCIÓN MEJORADA: Compartir por WhatsApp
+        // FUNCIÓN MEJORADA: Compartir por WhatsApp
         async function shareViaWhatsApp() {
             const photoCount = photos.filter(photo => photo !== null).length;
             const contractNumber = contractNumberInput.value.trim();
@@ -878,68 +879,96 @@
             }
 
             try {
-                showStatus('Preparando archivo para WhatsApp...', 'success');
+                showStatus('Preparando envío a WhatsApp...', 'success');
                 
                 // Generar el ZIP
                 const zipBlob = await generateZipBlob();
-                const file = new File([zipBlob], `${contractNumber}.zip`, { type: 'application/zip' });
+                const fileName = `${contractNumber}.zip`;
+                const file = new File([zipBlob], fileName, { type: 'application/zip' });
                 
-                // Verificar si el navegador soporta la Web Share API
+                // INTENTO 1: Web Share API (funciona en Android Chrome, iOS Safari)
                 if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                    // Método MODERNO: Web Share API (funciona en algunos móviles)
                     await navigator.share({
                         title: `Expediente ${contractNumber}`,
                         text: `Expediente de fotos - Contrato ${contractNumber}`,
                         files: [file]
                     });
-                    showStatus('¡Compartido exitosamente!', 'success');
-                } else {
-                    // Método ALTERNATIVO: Descargar y sugerir compartir
-                    await downloadAndSuggestShare(file, contractNumber);
+                    showStatus('¡Archivo enviado por WhatsApp!', 'success');
+                    return;
                 }
+                
+                // INTENTO 2: WhatsApp API con enlace de descarga directa
+                await sendViaWhatsAppAPI(file, contractNumber);
                 
             } catch (error) {
                 console.error('Error compartiendo por WhatsApp:', error);
-                // Si falla el método moderno, usar el alternativo
-                try {
-                    const zipBlob = await generateZipBlob();
-                    const file = new File([zipBlob], `${contractNumber}.zip`, { type: 'application/zip' });
-                    await downloadAndSuggestShare(file, contractNumber);
-                } catch (fallbackError) {
-                    showStatus('Error al compartir. Descarga el ZIP y compártelo manualmente.', 'error');
-                }
+                // INTENTO 3: Método de respaldo
+                await backupWhatsAppMethod(contractNumber);
             }
         }
 
-        // Función auxiliar para descargar y sugerir compartir
-        async function downloadAndSuggestShare(file, contractNumber) {
-            // Descargar el archivo primero
+        // INTENTO 2: Crear enlace de descarga y enviar por WhatsApp
+        async function sendViaWhatsAppAPI(file, contractNumber) {
+            // Crear URL temporal para el archivo
             const fileUrl = URL.createObjectURL(file);
-            const tempLink = document.createElement('a');
-            tempLink.href = fileUrl;
-            tempLink.download = `${contractNumber}.zip`;
-            document.body.appendChild(tempLink);
-            tempLink.click();
-            document.body.removeChild(tempLink);
             
-            // Esperar un momento para que se complete la descarga
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // En dispositivos móviles, intentamos usar el esquema de WhatsApp
+            if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                const message = `📁 Expediente de Fotos - Contrato ${contractNumber}\n\nDescarga el archivo aquí: ${fileUrl}`;
+                const whatsappUrl = `whatsapp://send?text=${encodeURIComponent(message)}`;
+                
+                // Intentar abrir la app de WhatsApp
+                window.location.href = whatsappUrl;
+                
+                // Descargar también localmente por si falla
+                downloadFile(file, `${contractNumber}.zip`);
+                
+                showStatus('Abriendo WhatsApp... Adjunta el archivo descargado.', 'success');
+            } else {
+                // En desktop, abrir WhatsApp Web
+                await backupWhatsAppMethod(contractNumber);
+            }
+            
+            // Limpiar después de 30 segundos
+            setTimeout(() => URL.revokeObjectURL(fileUrl), 30000);
+        }
+
+        // INTENTO 3: Método de respaldo - Descargar y abrir WhatsApp
+        async function backupWhatsAppMethod(contractNumber) {
+            // Generar ZIP nuevamente por seguridad
+            const zipBlob = await generateZipBlob();
+            
+            // Descargar archivo
+            downloadFile(zipBlob, `${contractNumber}.zip`);
+            
+            // Esperar a que se complete la descarga
+            await new Promise(resolve => setTimeout(resolve, 2000));
             
             // Crear mensaje para WhatsApp
-            const message = `📁 *Expediente de Fotos* 📷\n\n` +
+            const message = `📁 *EXPEDIENTE DE FOTOS* 📷\n\n` +
                         `📍 *Contrato:* ${contractNumber}\n` +
-                        `🖼️ *Archivo adjunto:* ${contractNumber}.zip\n\n` +
-                        `_El archivo ZIP ha sido descargado. Por favor, ábrelo y compártelo por WhatsApp manualmente._`;
+                        `📦 *Archivo:* ${contractNumber}.zip\n\n` +
+                        `_El archivo ZIP se ha descargado automáticamente. Por favor, ábrelo desde tus descargas y adjúntalo a este chat._`;
             
-            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+            // Abrir WhatsApp
+            const whatsappUrl = `https://web.whatsapp.com/send?text=${encodeURIComponent(message)}`;
             window.open(whatsappUrl, '_blank');
             
             showStatus('Archivo descargado. Abriendo WhatsApp...', 'success');
+        }
+
+        // Función auxiliar para descargar archivo
+        function downloadFile(blob, fileName) {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
             
-            // Limpiar URL después de un tiempo
-            setTimeout(() => {
-                URL.revokeObjectURL(fileUrl);
-            }, 5000);
+            // Limpiar después de un tiempo
+            setTimeout(() => URL.revokeObjectURL(url), 30000);
         }
 
         // Función auxiliar para generar el ZIP y devolver el Blob
@@ -963,12 +992,6 @@
                 zip.generateAsync({type: "blob"}).then(resolve).catch(reject);
             });
         }
-
-
-
-
-
-
 
 
         // // Función auxiliar para generar el ZIP y devolver el Blob
