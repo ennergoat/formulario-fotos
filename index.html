@@ -800,7 +800,68 @@
             });
         }
 
-        // NUEVA FUNCIÓN: Compartir por WhatsApp
+        // // NUEVA FUNCIÓN: Compartir por WhatsApp
+        // async function shareViaWhatsApp() {
+        //     const photoCount = photos.filter(photo => photo !== null).length;
+        //     const contractNumber = contractNumberInput.value.trim();
+            
+        //     if (photoCount === 0) {
+        //         showStatus('No hay fotos para compartir', 'error');
+        //         return;
+        //     }
+            
+        //     if (!contractNumber) {
+        //         showStatus('Por favor ingresa el número de contrato', 'error');
+        //         contractNumberInput.focus();
+        //         return;
+        //     }
+
+        //     try {
+        //         showStatus('Preparando archivo para WhatsApp...', 'success');
+                
+        //         // Generar el ZIP primero
+        //         const zipBlob = await generateZipBlob();
+                
+        //         // Crear un objeto File desde el Blob
+        //         const file = new File([zipBlob], `${contractNumber}.zip`, { type: 'application/zip' });
+                
+        //         // Crear una URL para el archivo
+        //         const fileUrl = URL.createObjectURL(file);
+                
+        //         // Crear enlace de WhatsApp
+        //         const message = `Expediente de fotos - Contrato ${contractNumber}`;
+        //         const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+                
+        //         // Crear enlace de descarga temporal
+        //         const tempLink = document.createElement('a');
+        //         tempLink.href = fileUrl;
+        //         tempLink.download = `${contractNumber}.zip`;
+        //         document.body.appendChild(tempLink);
+                
+        //         // Primero descargar el archivo localmente
+        //         tempLink.click();
+                
+        //         // Luego abrir WhatsApp
+        //         setTimeout(() => {
+        //             window.open(whatsappUrl, '_blank');
+        //             showStatus('Archivo listo para compartir por WhatsApp', 'success');
+        //         }, 1000);
+                
+        //         // Limpiar
+        //         setTimeout(() => {
+        //             document.body.removeChild(tempLink);
+        //             URL.revokeObjectURL(fileUrl);
+        //         }, 5000);
+                
+        //     } catch (error) {
+        //         console.error('Error compartiendo por WhatsApp:', error);
+        //         showStatus('Error al compartir por WhatsApp', 'error');
+        //     }
+        // }
+
+
+
+        // NUEVA FUNCIÓN MEJORADA: Compartir por WhatsApp
         async function shareViaWhatsApp() {
             const photoCount = photos.filter(photo => photo !== null).length;
             const contractNumber = contractNumberInput.value.trim();
@@ -819,44 +880,66 @@
             try {
                 showStatus('Preparando archivo para WhatsApp...', 'success');
                 
-                // Generar el ZIP primero
+                // Generar el ZIP
                 const zipBlob = await generateZipBlob();
-                
-                // Crear un objeto File desde el Blob
                 const file = new File([zipBlob], `${contractNumber}.zip`, { type: 'application/zip' });
                 
-                // Crear una URL para el archivo
-                const fileUrl = URL.createObjectURL(file);
-                
-                // Crear enlace de WhatsApp
-                const message = `Expediente de fotos - Contrato ${contractNumber}`;
-                const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-                
-                // Crear enlace de descarga temporal
-                const tempLink = document.createElement('a');
-                tempLink.href = fileUrl;
-                tempLink.download = `${contractNumber}.zip`;
-                document.body.appendChild(tempLink);
-                
-                // Primero descargar el archivo localmente
-                tempLink.click();
-                
-                // Luego abrir WhatsApp
-                setTimeout(() => {
-                    window.open(whatsappUrl, '_blank');
-                    showStatus('Archivo listo para compartir por WhatsApp', 'success');
-                }, 1000);
-                
-                // Limpiar
-                setTimeout(() => {
-                    document.body.removeChild(tempLink);
-                    URL.revokeObjectURL(fileUrl);
-                }, 5000);
+                // Verificar si el navegador soporta la Web Share API
+                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                    // Método MODERNO: Web Share API (funciona en algunos móviles)
+                    await navigator.share({
+                        title: `Expediente ${contractNumber}`,
+                        text: `Expediente de fotos - Contrato ${contractNumber}`,
+                        files: [file]
+                    });
+                    showStatus('¡Compartido exitosamente!', 'success');
+                } else {
+                    // Método ALTERNATIVO: Descargar y sugerir compartir
+                    await downloadAndSuggestShare(file, contractNumber);
+                }
                 
             } catch (error) {
                 console.error('Error compartiendo por WhatsApp:', error);
-                showStatus('Error al compartir por WhatsApp', 'error');
+                // Si falla el método moderno, usar el alternativo
+                try {
+                    const zipBlob = await generateZipBlob();
+                    const file = new File([zipBlob], `${contractNumber}.zip`, { type: 'application/zip' });
+                    await downloadAndSuggestShare(file, contractNumber);
+                } catch (fallbackError) {
+                    showStatus('Error al compartir. Descarga el ZIP y compártelo manualmente.', 'error');
+                }
             }
+        }
+
+        // Función auxiliar para descargar y sugerir compartir
+        async function downloadAndSuggestShare(file, contractNumber) {
+            // Descargar el archivo primero
+            const fileUrl = URL.createObjectURL(file);
+            const tempLink = document.createElement('a');
+            tempLink.href = fileUrl;
+            tempLink.download = `${contractNumber}.zip`;
+            document.body.appendChild(tempLink);
+            tempLink.click();
+            document.body.removeChild(tempLink);
+            
+            // Esperar un momento para que se complete la descarga
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Crear mensaje para WhatsApp
+            const message = `📁 *Expediente de Fotos* 📷\n\n` +
+                        `📍 *Contrato:* ${contractNumber}\n` +
+                        `🖼️ *Archivo adjunto:* ${contractNumber}.zip\n\n` +
+                        `_El archivo ZIP ha sido descargado. Por favor, ábrelo y compártelo por WhatsApp manualmente._`;
+            
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+            
+            showStatus('Archivo descargado. Abriendo WhatsApp...', 'success');
+            
+            // Limpiar URL después de un tiempo
+            setTimeout(() => {
+                URL.revokeObjectURL(fileUrl);
+            }, 5000);
         }
 
         // Función auxiliar para generar el ZIP y devolver el Blob
@@ -880,6 +963,35 @@
                 zip.generateAsync({type: "blob"}).then(resolve).catch(reject);
             });
         }
+
+
+
+
+
+
+
+
+        // // Función auxiliar para generar el ZIP y devolver el Blob
+        // function generateZipBlob() {
+        //     return new Promise((resolve, reject) => {
+        //         const contractNumber = contractNumberInput.value.trim();
+        //         const validFileName = contractNumber.replace(/[^a-zA-Z0-9-_]/g, '_');
+                
+        //         const zip = new JSZip();
+        //         const imgFolder = zip.folder(validFileName);
+                
+        //         // Agregar cada foto al ZIP
+        //         photos.forEach((photo, index) => {
+        //             if (photo) {
+        //                 const blob = dataURLToBlob(photo.src);
+        //                 imgFolder.file(`foto_${index + 1}.jpg`, blob);
+        //             }
+        //         });
+                
+        //         // Generar el Blob
+        //         zip.generateAsync({type: "blob"}).then(resolve).catch(reject);
+        //     });
+        // }
         
         // Convertir data URL a Blob
         function dataURLToBlob(dataURL) {
