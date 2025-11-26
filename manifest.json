@@ -1,0 +1,22 @@
+{
+  "name": "Expediente de Fotos",
+  "short_name": "ExpedienteFotos",
+  "description": "Aplicación para generar expedientes de fotos y documentos Word",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f7fa",
+  "theme_color": "#2c3e50",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiByeD0iMjQiIGZpbGw9IiMzNDk4REIiLz4KPHBhdGggZD0iTTk2IDY0QzEwNi41IDY0IDExNSA3Mi41IDExNSA4M1YxMDlDMTE1IDExOS41IDEwNi41IDEyOCA5NiAxMjhDODUuNSAxMjggNzcgMTE5LjUgNzcgMTA5VjgzQzc3IDcyLjUgODUuNSA2NCA5NiA2NFoiIGZpbGw9IiNGRkZGRkYiLz4KPHBhdGggZD0iTTEyOCAxMjhINjRDNTcuMiAxMjggNTEuNSAxMzMuNyA1MS41IDE0MC41VjE2MEM1MS41IDE2Ni44IDU3LjIgMTcyLjUgNjQgMTcyLjVIMTI4QzEzNC44IDE3Mi41IDE0MC41IDE2Ni44IDE0MC41IDE2MFYxNDAuNUMxNDAuNSAxMzMuNyAxMzQuOCAxMjggMTI4IDEyOFoiIGZpbGw9IiNGRkZGRkYiLz4KPC9zdmc+Cg==",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiByeD0iNjQiIGZpbGw9IiMzNDk4REIiLz4KPHBhdGggZD0iTTI1NiAxNzBDMjc0LjUgMTcwIDI5MCAxODUuNSAyOTAgMjA0VjI5MUMyOTAgMzA5LjUgMjc0LjUgMzI1IDI1NiAzMjVDMjM3LjUgMzI1IDIyMiAzMDkuNSAyMjIgMjkxVjIwNEMyMjIgMTg1LjUgMjM3LjUgMTcwIDI1NiAxNzBaIiBmaWxsPSIjRkZGRkZGIi8+CjxwYXRoIGQ9Ik0zNDEgMzI1SDE3MUMxNTIuNSAzMjUgMTM3IDM0MC41IDEzNyAzNTlWNDI3QzEzNyA0NDUuNSAxNTIuNSA0NjEgMTcxIDQ2MUgzNDFDMzU5LjUgNDYxIDM3NSA0NDUuNSAzNzUgNDI3VjM1OUMzNzUgMzQwLjUgMzU5LjUgMzI1IDM0MSAzMjVaIiBmaWxsPSIjRkZGRkZGIi8+Cjwvc3ZnPgo=",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}

@@ -1,0 +1,869 @@
+
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expediente de Fotos</title>
+    <meta name="theme-color" content="#2c3e50">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #3498db;
+            --secondary: #2c3e50;
+            --accent: #1abc9c;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --success: #27ae60;
+            --warning: #e74c3c;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: var(--dark);
+            line-height: 1.6;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 15px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        header h1 {
+            font-size: 1.6rem;
+            margin-bottom: 8px;
+        }
+        
+        header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .app-icon {
+            font-size: 2.2rem;
+            margin-bottom: 12px;
+            color: var(--accent);
+        }
+        
+        /* Nuevos estilos para el campo de contrato */
+        .contract-section {
+            background-color: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .contract-input {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .contract-input label {
+            font-weight: 600;
+            color: var(--secondary);
+            font-size: 1rem;
+        }
+        
+        .contract-input input {
+            padding: 12px 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .contract-input input:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        .upload-section {
+            background-color: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .photo-item {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .photo-item:last-child {
+            border-bottom: none;
+        }
+        
+        .photo-description {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--secondary);
+            font-size: 0.95rem;
+        }
+        
+        .upload-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .upload-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 15px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px rgba(52, 152, 219, 0.3);
+            flex: 1;
+        }
+        
+        .upload-btn:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .upload-btn i {
+            font-size: 1rem;
+        }
+        
+        .preview-container {
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .image-preview {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: rgba(231, 76, 60, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        
+        .actions-section {
+            background-color: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .action-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px;
+            background-color: var(--success);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px rgba(39, 174, 96, 0.3);
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .action-btn:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .clear-btn {
+            background-color: var(--warning);
+            box-shadow: 0 2px 6px rgba(231, 76, 60, 0.3);
+        }
+        
+        .clear-btn:hover {
+            background-color: #c0392b;
+        }
+        
+        .zip-btn {
+            background-color: var(--accent);
+            box-shadow: 0 2px 6px rgba(26, 188, 156, 0.3);
+        }
+        
+        .zip-btn:hover {
+            background-color: #16a085;
+        }
+        
+        .instructions {
+            background-color: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .instructions h2 {
+            margin-bottom: 15px;
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .instructions ol {
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 15px;
+            color: #7f8c8d;
+            font-size: 0.8rem;
+        }
+        
+        .status-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+        }
+        
+        .success {
+            background-color: rgba(39, 174, 96, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(39, 174, 96, 0.3);
+        }
+        
+        .error {
+            background-color: rgba(231, 76, 60, 0.1);
+            color: var(--warning);
+            border: 1px solid rgba(231, 76, 60, 0.3);
+        }
+        
+        @media (min-width: 768px) {
+            .container {
+                max-width: 800px;
+            }
+            
+            .actions-section {
+                flex-direction: row;
+            }
+            
+            .action-btn {
+                flex: 1;
+            }
+            
+            .contract-input {
+                flex-direction: row;
+                align-items: center;
+                gap: 15px;
+            }
+            
+            .contract-input label {
+                margin-bottom: 0;
+                flex-shrink: 0;
+            }
+            
+            .contract-input input {
+                flex: 1;
+                max-width: 300px;
+            }
+        }
+
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="app-icon">
+                <i class="fas fa-camera"></i>
+            </div>
+            <h1>Expediente de Fotos</h1>
+            <p>Sube las fotos requeridas y genera tu documento PDF y archivo ZIP</p>
+        </header>
+        
+        <!-- Nueva sección para el número de contrato -->
+        <section class="contract-section">
+            <div class="contract-input">
+                <label for="contractNumber">Número de Contrato:</label>
+                <input type="text" id="contractNumber" placeholder="Ingrese el número de contrato" maxlength="20">
+            </div>
+        </section>
+        
+        <section class="upload-section" id="uploadSection">
+            <!-- Las 10 fotos se generarán dinámicamente con JavaScript -->
+        </section>
+        
+        <section class="actions-section">
+            <button class="action-btn" id="generatePdfBtn" disabled>
+                <i class="fas fa-file-pdf"></i> Generar PDF
+            </button>
+            <button class="action-btn zip-btn" id="generateZipBtn" disabled>
+                <i class="fas fa-file-archive"></i> Descargar ZIP
+            </button>
+
+            <button class="action-btn clear-btn" id="clearBtn">
+                <i class="fas fa-broom"></i> Limpiar
+            </button>
+
+        </section>
+        
+        <div class="status-message" id="statusMessage"></div>
+        
+        <section class="instructions">
+            <h2><i class="fas fa-info-circle"></i> Instrucciones</h2>
+            <ol>
+                <li>Ingresa el número de contrato en el campo correspondiente</li>
+                <li>Sube las 10 fotos requeridas usando los botones correspondientes</li>
+                <li>El documento PDF se generará con mínimo 3 fotos</li>
+                <li>El archivo ZIP se descargará con el nombre del número de contrato</li>
+                <li>Usa el botón Limpiar para empezar de nuevo</li>
+            </ol>
+        </section>
+        
+        <footer>
+            <p>Aplicación PWA</p>
+        </footer>
+    </div>
+
+    <!-- Incluir las librerías necesarias -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <script>
+        // Configuración de la aplicación
+        const photoDescriptions = [
+            "1. Foto panorámica de la casa y que se visualice la ubicación del cajetín.",
+            "2. Foto de como se encuentra medidor antes de la intervención.",
+            "3. Foto más alejada del cajetín que se visualice como está colocado",
+            "4. Foto que se visualice la flecha en que dirección va.",
+            "5. Foto de que se está realizando la prueba de exactitud.",
+            "6. Foto del medidor instalado en posición correcta.",
+            "7. Foto del elemento de seguridad colocado.(Sello twister, precinto o mortero).",
+            "8. Foto de como queda el medidor y cajetín.",
+            "9. Foto de la notificación que se vaya a entregar",
+            "10. Foto de la notificación entregada."
+        ];
+        
+        // Elementos del DOM
+        const uploadSection = document.getElementById('uploadSection');
+        const generatePdfBtn = document.getElementById('generatePdfBtn');
+        const generateZipBtn = document.getElementById('generateZipBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const statusMessage = document.getElementById('statusMessage');
+        const contractNumberInput = document.getElementById('contractNumber');
+        
+        // Array para almacenar las imágenes
+        let photos = Array(10).fill(null);
+        
+        // Inicializar la aplicación
+        function initApp() {
+            renderUploadSection();
+            setupEventListeners();
+            
+            // Cargar datos guardados si existen
+            loadSavedData();
+        }
+        
+        // Renderizar la sección de subida de fotos
+        function renderUploadSection() {
+            uploadSection.innerHTML = '';
+            
+            photoDescriptions.forEach((description, index) => {
+                const photoItem = document.createElement('div');
+                photoItem.className = 'photo-item';
+                
+                const photoDescription = document.createElement('div');
+                photoDescription.className = 'photo-description';
+                photoDescription.textContent = description;
+                
+                const uploadControls = document.createElement('div');
+                uploadControls.className = 'upload-controls';
+                
+                const uploadBtn = document.createElement('button');
+                uploadBtn.className = 'upload-btn';
+                uploadBtn.innerHTML = '<i class="fas fa-camera"></i> Subir Foto';
+                uploadBtn.setAttribute('data-index', index);
+                
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.className = 'file-input';
+                fileInput.accept = 'image/*';
+                fileInput.setAttribute('data-index', index);
+                
+                const previewContainer = document.createElement('div');
+                previewContainer.className = 'preview-container';
+                previewContainer.id = `preview-${index}`;
+                
+                uploadControls.appendChild(uploadBtn);
+                uploadControls.appendChild(fileInput);
+                
+                photoItem.appendChild(photoDescription);
+                photoItem.appendChild(uploadControls);
+                photoItem.appendChild(previewContainer);
+                
+                uploadSection.appendChild(photoItem);
+            });
+        }
+        
+        // Configurar event listeners
+        function setupEventListeners() {
+            // Event listeners para botones de subida
+            document.querySelectorAll('.upload-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.getAttribute('data-index'));
+                    document.querySelector(`.file-input[data-index="${index}"]`).click();
+                });
+            });
+            
+            // Event listeners para inputs de archivo
+            document.querySelectorAll('.file-input').forEach(input => {
+                input.addEventListener('change', (e) => {
+                    const index = parseInt(e.target.getAttribute('data-index'));
+                    const file = e.target.files[0];
+                    
+                    if (file && file.type.match('image.*')) {
+                        handleImageUpload(file, index);
+                    }
+                });
+            });
+            
+            // Event listeners para botones de acción
+            generatePdfBtn.addEventListener('click', generatePDF);
+            generateZipBtn.addEventListener('click', generateZipFile);
+            clearBtn.addEventListener('click', clearAllPhotos);
+            
+            // Guardar número de contrato cuando cambie
+            contractNumberInput.addEventListener('input', saveContractNumber);
+        }
+        
+        // Manejar la subida de una imagen
+        function handleImageUpload(file, index) {
+            const reader = new FileReader();
+            
+            reader.onload = (e) => {
+                photos[index] = {
+                    src: e.target.result,
+                    name: file.name,
+                    file: file
+                };
+                
+                renderImagePreview(index, e.target.result);
+                updateActionButtons();
+                savePhotosToStorage();
+                showStatus('Foto subida correctamente', 'success');
+            };
+            
+            reader.readAsDataURL(file);
+        }
+        
+        // Renderizar vista previa de la imagen
+        function renderImagePreview(index, src) {
+            const previewContainer = document.getElementById(`preview-${index}`);
+            previewContainer.innerHTML = '';
+            
+            const imagePreview = document.createElement('div');
+            imagePreview.className = 'image-preview';
+            
+            const img = document.createElement('img');
+            img.src = src;
+            img.alt = `Foto ${index + 1}`;
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove-btn';
+            removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+            removeBtn.addEventListener('click', () => removePhoto(index));
+            
+            imagePreview.appendChild(img);
+            imagePreview.appendChild(removeBtn);
+            previewContainer.appendChild(imagePreview);
+        }
+        
+        // Eliminar una foto
+        function removePhoto(index) {
+            photos[index] = null;
+            const previewContainer = document.getElementById(`preview-${index}`);
+            previewContainer.innerHTML = '';
+            document.querySelector(`.file-input[data-index="${index}"]`).value = '';
+            updateActionButtons();
+            savePhotosToStorage();
+            showStatus('Foto eliminada', 'success');
+        }
+        
+        // Actualizar estado de los botones de acción
+        function updateActionButtons() {
+            const photoCount = photos.filter(photo => photo !== null).length;
+            const hasMinimumPhotos = photoCount >= 3;
+            
+            generatePdfBtn.disabled = !hasMinimumPhotos;
+            generateZipBtn.disabled = photoCount === 0;
+            
+            if (photoCount > 0) {
+                showStatus(`Tienes ${photoCount} de 10 fotos subidas`, 'success');
+            } else {
+                hideStatus();
+            }
+        }
+        
+        // Mostrar mensaje de estado
+        function showStatus(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message ${type}`;
+            statusMessage.style.display = 'block';
+            
+            // Ocultar después de 3 segundos
+            setTimeout(() => {
+                hideStatus();
+            }, 3000);
+        }
+        
+        // Ocultar mensaje de estado
+        function hideStatus() {
+            statusMessage.style.display = 'none';
+        }
+        
+        // Limpiar todas las fotos
+        function clearAllPhotos() {
+            if (confirm('¿Estás seguro de que quieres eliminar todas las fotos?')) {
+                photos = Array(10).fill(null);
+                document.querySelectorAll('.file-input').forEach(input => {
+                    input.value = '';
+                });
+                document.querySelectorAll('.preview-container').forEach(container => {
+                    container.innerHTML = '';
+                });
+                updateActionButtons();
+                savePhotosToStorage();
+                showStatus('Todas las fotos han sido eliminadas', 'success');
+            }
+        }
+
+        // Generar documento PDF con tamaño exacto 7x7 cm
+        async function generatePDF() {
+            const photoCount = photos.filter(photo => photo !== null).length;
+            
+            if (photoCount < 3) {
+                showStatus('Se requieren al menos 3 fotos para generar el PDF', 'error');
+                return;
+            }
+
+            try {
+                // Crear nuevo PDF
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // Configuración
+                const pageWidth = 210; // A4 width in mm
+                const pageHeight = 297; // A4 height in mm
+                const imageSize = 70; // 7x7 cm
+                const margin = 15;
+                const spacing = 10;
+                
+                // Calcular posiciones
+                const imagesPerRow = 2;
+                const startX = (pageWidth - (imagesPerRow * imageSize + (imagesPerRow - 1) * spacing)) / 2;
+                
+                // Título
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(11);
+                doc.text('Expediente de Fotos', margin, 20);
+                
+                let x = startX;
+                let y = 30;
+                let photoIndex = 0;
+                
+                // Obtener solo las fotos que existen
+                const existingPhotos = photos
+                    .map((photo, index) => photo ? { photo, index: index + 1 } : null)
+                    .filter(item => item !== null);
+                
+                // Procesar cada foto
+                for (const item of existingPhotos) {
+                    const { photo, index } = item;
+                    
+                    // Verificar si necesitamos nueva página
+                    if (y + imageSize > pageHeight - margin) {
+                        doc.addPage();
+                        y = 30;
+                        x = startX;
+                    }
+                    
+                    try {
+                        // Convertir data URL a Image object
+                        const img = await loadImage(photo.src);
+                        
+                        // Calcular dimensiones manteniendo proporción
+                        const aspectRatio = img.width / img.height;
+                        let renderWidth = imageSize;
+                        let renderHeight = imageSize;
+                        
+                        if (aspectRatio > 1) {
+                            // Imagen horizontal
+                            renderHeight = imageSize / aspectRatio;
+                        } else {
+                            // Imagen vertical
+                            renderWidth = imageSize * aspectRatio;
+                        }
+                        
+                        // Calcular posición centrada dentro del área 7x7 cm
+                        const offsetX = x + (imageSize - renderWidth) / 2;
+                        const offsetY = y + (imageSize - renderHeight) / 2;
+                        
+                        // Agregar imagen al PDF
+                        doc.addImage({
+                            imageData: photo.src,
+                            x: offsetX,
+                            y: offsetY,
+                            width: renderWidth,
+                            height: renderHeight
+                        });
+                        
+                        // Borde del área de 7x7 cm
+                        doc.rect(x, y, imageSize, imageSize);
+                        
+                        // Número de foto
+                        doc.setFontSize(8);
+                        doc.text(`Foto ${index}`, x + imageSize/2, y + imageSize + 5, { align: 'center' });
+                        
+                        // Actualizar posición para siguiente imagen
+                        photoIndex++;
+                        if (photoIndex % imagesPerRow === 0) {
+                            x = startX;
+                            y += imageSize + spacing + 15; // Espacio para el número
+                        } else {
+                            x += imageSize + spacing;
+                        }
+                        
+                    } catch (error) {
+                        console.error(`Error procesando foto ${index}:`, error);
+                        // Continuar con la siguiente foto
+                        photoIndex++;
+                        if (photoIndex % imagesPerRow === 0) {
+                            x = startX;
+                            y += imageSize + spacing + 15;
+                        } else {
+                            x += imageSize + spacing;
+                        }
+                    }
+                }
+                
+                // Guardar PDF
+                doc.save('expediente_fotos.pdf');
+                showStatus('PDF generado correctamente con fotos de 7x7 cm', 'success');
+                
+            } catch (error) {
+                console.error('Error generando PDF:', error);
+                showStatus('Error al generar el PDF: ' + error.message, 'error');
+            }
+        }
+
+        // Función auxiliar para cargar imágenes
+        function loadImage(src) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = reject;
+                img.src = src;
+            });
+        }
+        
+        // Generar archivo ZIP con el número de contrato como nombre
+        function generateZipFile() {
+            const photoCount = photos.filter(photo => photo !== null).length;
+            
+            if (photoCount === 0) {
+                showStatus('No hay fotos para comprimir', 'error');
+                return;
+            }
+            
+            // Obtener el número de contrato
+            const contractNumber = contractNumberInput.value.trim();
+            
+            if (!contractNumber) {
+                showStatus('Por favor ingresa el número de contrato', 'error');
+                contractNumberInput.focus();
+                return;
+            }
+            
+            // Validar que el número de contrato tenga solo caracteres válidos para nombres de archivo
+            const validFileName = contractNumber.replace(/[^a-zA-Z0-9-_]/g, '_');
+            
+            const zip = new JSZip();
+            
+            // Crear carpeta con el número de contrato
+            const imgFolder = zip.folder(validFileName);
+            
+            // Agregar cada foto al ZIP
+            photos.forEach((photo, index) => {
+                if (photo) {
+                    // Convertir data URL a blob
+                    const blob = dataURLToBlob(photo.src);
+                    imgFolder.file(`foto_${index + 1}.jpg`, blob);
+                }
+            });
+            
+            // Generar y descargar el ZIP
+            zip.generateAsync({type:"blob"}).then(function(content) {
+                saveAs(content, `${validFileName}.zip`);
+                showStatus(`Archivo ZIP "${validFileName}.zip" generado correctamente`, 'success');
+            });
+        }
+        
+        // Convertir data URL a Blob
+        function dataURLToBlob(dataURL) {
+            const parts = dataURL.split(';base64,');
+            const contentType = parts[0].split(':')[1];
+            const raw = window.atob(parts[1]);
+            const uInt8Array = new Uint8Array(raw.length);
+            
+            for (let i = 0; i < raw.length; ++i) {
+                uInt8Array[i] = raw.charCodeAt(i);
+            }
+            
+            return new Blob([uInt8Array], { type: contentType });
+        }
+        
+        // Guardar número de contrato en localStorage
+        function saveContractNumber() {
+            localStorage.setItem('contractNumber', contractNumberInput.value);
+        }
+        
+        // Guardar fotos en localStorage
+        function savePhotosToStorage() {
+            const photosToSave = photos.map(photo => {
+                if (photo) {
+                    return {
+                        src: photo.src,
+                        name: photo.name
+                    };
+                }
+                return null;
+            });
+            localStorage.setItem('expedientePhotos', JSON.stringify(photosToSave));
+        }
+        
+        // Cargar datos guardados
+        function loadSavedData() {
+            // Cargar número de contrato
+            const savedContractNumber = localStorage.getItem('contractNumber');
+            if (savedContractNumber) {
+                contractNumberInput.value = savedContractNumber;
+            }
+            
+            // Cargar fotos
+            const savedPhotos = localStorage.getItem('expedientePhotos');
+            if (savedPhotos) {
+                const parsedPhotos = JSON.parse(savedPhotos);
+                parsedPhotos.forEach((photo, index) => {
+                    if (photo) {
+                        photos[index] = {
+                            src: photo.src,
+                            name: photo.name,
+                            file: null // No podemos guardar el objeto File completo
+                        };
+                        renderImagePreview(index, photo.src);
+                    }
+                });
+                updateActionButtons();
+            }
+        }
+
+
+
+
+        
+        // Service Worker para funcionalidad PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                // Registrar el Service Worker
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('Service Worker registrado: ', registration);
+                    })
+                    .catch(registrationError => {
+                        console.log('Error en el registro del Service Worker: ', registrationError);
+                    });
+            });
+        }
+        
+        // Inicializar la aplicación cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
