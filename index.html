@@ -162,6 +162,7 @@
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
+            align-items: center;
         }
         
         .image-preview {
@@ -194,6 +195,27 @@
             justify-content: center;
             cursor: pointer;
             font-size: 0.8rem;
+        }
+        
+        .add-more-btn {
+            width: 80px;
+            height: 80px;
+            border: 2px dashed #bdc3c7;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa;
+            color: #7f8c8d;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.5rem;
+        }
+        
+        .add-more-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background-color: rgba(52, 152, 219, 0.1);
         }
         
         .actions-section {
@@ -251,16 +273,6 @@
         
         .zip-btn:hover {
             background-color: #16a085;
-        }
-
-        /* Nuevo estilo para botón de WhatsApp */
-        .whatsapp-btn {
-            background-color: #25D366;
-            box-shadow: 0 2px 6px rgba(37, 211, 102, 0.3);
-        }
-
-        .whatsapp-btn:hover {
-            background-color: #128C7E;
         }
         
         .instructions {
@@ -329,12 +341,10 @@
             
             .actions-section {
                 flex-direction: row;
-                flex-wrap: wrap;
             }
             
             .action-btn {
                 flex: 1;
-                min-width: 150px;
             }
             
             .contract-input {
@@ -353,6 +363,8 @@
                 max-width: 300px;
             }
         }
+
+
     </style>
 </head>
 <body>
@@ -369,7 +381,7 @@
         <section class="contract-section">
             <div class="contract-input">
                 <label for="contractNumber">Número de Contrato:</label>
-                <input type="text" id="contractNumber" placeholder="Ingrese el número de contrato" maxlength="20">
+                <input type="text" id="contractNumber" placeholder="Ingrese el número de contrato" maxlength="20" pattern="[0-9]*" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
             </div>
         </section>
         
@@ -382,17 +394,13 @@
                 <i class="fas fa-file-pdf"></i> Generar PDF
             </button>
             <button class="action-btn zip-btn" id="generateZipBtn" disabled>
-                <i class="fas fa-file-archive"></i> Descargar ZIP
+                <i class="fas fa-file-archive"></i> Descargar carpeta de imagenes
             </button>
-
-            <button class="action-btn whatsapp-btn" id="shareWhatsAppBtn" disabled>
-                <i class="fab fa-whatsapp"></i> Enviar por WhatsApp
-            </button>
-
 
             <button class="action-btn clear-btn" id="clearBtn">
                 <i class="fas fa-broom"></i> Limpiar
             </button>
+
         </section>
         
         <div class="status-message" id="statusMessage"></div>
@@ -400,12 +408,11 @@
         <section class="instructions">
             <h2><i class="fas fa-info-circle"></i> Instrucciones</h2>
             <ol>
-                <li>Ingresa el número de contrato en el campo correspondiente</li>
-                <li>Sube las 10 fotos requeridas usando los botones correspondientes</li>
+                <li>Ingresa el número de contrato en el campo correspondiente (solo números)</li>
+                <li>Sube las fotos requeridas usando los botones correspondientes - puedes subir múltiples fotos por cada descripción</li>
                 <li>El documento PDF se generará con mínimo 3 fotos</li>
-                <li>El archivo ZIP se descargará con el nombre del número de contrato</li>
-                <li>Puedes compartir el archivo ZIP directamente por WhatsApp</li>
-                <li>Usa el botón Limpiar para empezar de nuevo</li>
+                <li>La carpeta de imagenes (ZIP) se descargará con el nombre del número de contrato</li>
+                <li>Usa el botón Limpiar para eliminar todas las fotos y el número de contrato</li>
             </ol>
         </section>
         
@@ -438,13 +445,12 @@
         const uploadSection = document.getElementById('uploadSection');
         const generatePdfBtn = document.getElementById('generatePdfBtn');
         const generateZipBtn = document.getElementById('generateZipBtn');
-        const shareWhatsAppBtn = document.getElementById('shareWhatsAppBtn'); // Nuevo botón
         const clearBtn = document.getElementById('clearBtn');
         const statusMessage = document.getElementById('statusMessage');
         const contractNumberInput = document.getElementById('contractNumber');
         
-        // Array para almacenar las imágenes
-        let photos = Array(10).fill(null);
+        // Array para almacenar las imágenes - ahora será un array de arrays
+        let photos = Array(10).fill().map(() => []);
         
         // Inicializar la aplicación
         function initApp() {
@@ -479,6 +485,7 @@
                 fileInput.type = 'file';
                 fileInput.className = 'file-input';
                 fileInput.accept = 'image/*';
+                fileInput.multiple = true; // Permitir múltiple selección
                 fileInput.setAttribute('data-index', index);
                 
                 const previewContainer = document.createElement('div');
@@ -510,22 +517,26 @@
             document.querySelectorAll('.file-input').forEach(input => {
                 input.addEventListener('change', (e) => {
                     const index = parseInt(e.target.getAttribute('data-index'));
-                    const file = e.target.files[0];
+                    const files = Array.from(e.target.files);
                     
-                    if (file && file.type.match('image.*')) {
-                        handleImageUpload(file, index);
-                    }
+                    files.forEach(file => {
+                        if (file && file.type.match('image.*')) {
+                            handleImageUpload(file, index);
+                        }
+                    });
                 });
             });
             
             // Event listeners para botones de acción
             generatePdfBtn.addEventListener('click', generatePDF);
             generateZipBtn.addEventListener('click', generateZipFile);
-            shareWhatsAppBtn.addEventListener('click', shareViaWhatsApp); // Nuevo event listener
             clearBtn.addEventListener('click', clearAllPhotos);
             
-            // Guardar número de contrato cuando cambie
-            contractNumberInput.addEventListener('input', saveContractNumber);
+            // Validar que solo se ingresen números en el contrato
+            contractNumberInput.addEventListener('input', function(e) {
+                this.value = this.value.replace(/[^0-9]/g, '');
+                saveContractNumber();
+            });
         }
         
         // Manejar la subida de una imagen
@@ -533,13 +544,15 @@
             const reader = new FileReader();
             
             reader.onload = (e) => {
-                photos[index] = {
+                const photoData = {
                     src: e.target.result,
                     name: file.name,
                     file: file
                 };
                 
-                renderImagePreview(index, e.target.result);
+                photos[index].push(photoData);
+                
+                renderImagePreview(index);
                 updateActionButtons();
                 savePhotosToStorage();
                 showStatus('Foto subida correctamente', 'success');
@@ -548,34 +561,47 @@
             reader.readAsDataURL(file);
         }
         
-        // Renderizar vista previa de la imagen
-        function renderImagePreview(index, src) {
+        // Renderizar vista previa de las imágenes para un índice
+        function renderImagePreview(index) {
             const previewContainer = document.getElementById(`preview-${index}`);
             previewContainer.innerHTML = '';
             
-            const imagePreview = document.createElement('div');
-            imagePreview.className = 'image-preview';
+            // Mostrar las fotos existentes
+            photos[index].forEach((photo, photoIndex) => {
+                const imagePreview = document.createElement('div');
+                imagePreview.className = 'image-preview';
+                
+                const img = document.createElement('img');
+                img.src = photo.src;
+                img.alt = `Foto ${index + 1}-${photoIndex + 1}`;
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-btn';
+                removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                removeBtn.addEventListener('click', () => removePhoto(index, photoIndex));
+                
+                imagePreview.appendChild(img);
+                imagePreview.appendChild(removeBtn);
+                previewContainer.appendChild(imagePreview);
+            });
             
-            const img = document.createElement('img');
-                img.src = src;
-            img.alt = `Foto ${index + 1}`;
-            
-            const removeBtn = document.createElement('button');
-            removeBtn.className = 'remove-btn';
-            removeBtn.innerHTML = '<i class="fas fa-times"></i>';
-            removeBtn.addEventListener('click', () => removePhoto(index));
-            
-            imagePreview.appendChild(img);
-            imagePreview.appendChild(removeBtn);
-            previewContainer.appendChild(imagePreview);
+            // Agregar botón para añadir más fotos si ya hay al menos una
+            if (photos[index].length > 0) {
+                const addMoreBtn = document.createElement('div');
+                addMoreBtn.className = 'add-more-btn';
+                addMoreBtn.innerHTML = '<i class="fas fa-plus"></i>';
+                addMoreBtn.setAttribute('data-index', index);
+                addMoreBtn.addEventListener('click', () => {
+                    document.querySelector(`.file-input[data-index="${index}"]`).click();
+                });
+                previewContainer.appendChild(addMoreBtn);
+            }
         }
         
-        // Eliminar una foto
-        function removePhoto(index) {
-            photos[index] = null;
-            const previewContainer = document.getElementById(`preview-${index}`);
-            previewContainer.innerHTML = '';
-            document.querySelector(`.file-input[data-index="${index}"]`).value = '';
+        // Eliminar una foto específica
+        function removePhoto(index, photoIndex) {
+            photos[index].splice(photoIndex, 1);
+            renderImagePreview(index);
             updateActionButtons();
             savePhotosToStorage();
             showStatus('Foto eliminada', 'success');
@@ -583,16 +609,14 @@
         
         // Actualizar estado de los botones de acción
         function updateActionButtons() {
-            const photoCount = photos.filter(photo => photo !== null).length;
-            const hasMinimumPhotos = photoCount >= 3;
-            const hasContractNumber = contractNumberInput.value.trim() !== '';
+            const totalPhotos = photos.flat().length;
+            const hasMinimumPhotos = totalPhotos >= 3;
             
             generatePdfBtn.disabled = !hasMinimumPhotos;
-            generateZipBtn.disabled = photoCount === 0;
-            shareWhatsAppBtn.disabled = !(hasContractNumber && photoCount > 0); // Actualizado
+            generateZipBtn.disabled = totalPhotos === 0;
             
-            if (photoCount > 0) {
-                showStatus(`Tienes ${photoCount} de 10 fotos subidas`, 'success');
+            if (totalPhotos > 0) {
+                showStatus(`Tienes ${totalPhotos} fotos subidas en total`, 'success');
             } else {
                 hideStatus();
             }
@@ -615,27 +639,34 @@
             statusMessage.style.display = 'none';
         }
         
-        // Limpiar todas las fotos
+        // Limpiar todas las fotos Y el número de contrato
         function clearAllPhotos() {
-            if (confirm('¿Estás seguro de que quieres eliminar todas las fotos?')) {
-                photos = Array(10).fill(null);
-                document.querySelectorAll('.file-input').forEach(input => {
-                    input.value = '';
-                });
-                document.querySelectorAll('.preview-container').forEach(container => {
-                    container.innerHTML = '';
-                });
-                updateActionButtons();
-                savePhotosToStorage();
-                showStatus('Todas las fotos han sido eliminadas', 'success');
-            }
+            photos = Array(10).fill().map(() => []);
+            
+            // Limpiar inputs de archivo
+            document.querySelectorAll('.file-input').forEach(input => {
+                input.value = '';
+            });
+            
+            // Limpiar vistas previas
+            document.querySelectorAll('.preview-container').forEach(container => {
+                container.innerHTML = '';
+            });
+            
+            // Limpiar número de contrato
+            contractNumberInput.value = '';
+            localStorage.removeItem('contractNumber'); // Eliminar del almacenamiento
+            
+            updateActionButtons();
+            savePhotosToStorage(); // Guardar estado limpio
+            showStatus('Todas las fotos y el número de contrato han sido eliminados', 'success');
         }
 
         // Generar documento PDF con tamaño exacto 7x7 cm
         async function generatePDF() {
-            const photoCount = photos.filter(photo => photo !== null).length;
+            const totalPhotos = photos.flat().length;
             
-            if (photoCount < 3) {
+            if (totalPhotos < 3) {
                 showStatus('Se requieren al menos 3 fotos para generar el PDF', 'error');
                 return;
             }
@@ -663,79 +694,69 @@
                 
                 let x = startX;
                 let y = 30;
-                let photoIndex = 0;
+                let photoCount = 0;
                 
-                // Obtener solo las fotos que existen
-                const existingPhotos = photos
-                    .map((photo, index) => photo ? { photo, index: index + 1 } : null)
-                    .filter(item => item !== null);
-                
-                // Procesar cada foto
-                for (const item of existingPhotos) {
-                    const { photo, index } = item;
-                    
-                    // Verificar si necesitamos nueva página
-                    if (y + imageSize > pageHeight - margin) {
-                        doc.addPage();
-                        y = 30;
-                        x = startX;
-                    }
-                    
-                    try {
-                        // Convertir data URL a Image object
-                        const img = await loadImage(photo.src);
+                // Procesar cada grupo de fotos
+                for (let groupIndex = 0; groupIndex < photos.length; groupIndex++) {
+                    for (let photoIndex = 0; photoIndex < photos[groupIndex].length; photoIndex++) {
+                        const photo = photos[groupIndex][photoIndex];
                         
-                        // Calcular dimensiones manteniendo proporción
-                        const aspectRatio = img.width / img.height;
-                        let renderWidth = imageSize;
-                        let renderHeight = imageSize;
-                        
-                        if (aspectRatio > 1) {
-                            // Imagen horizontal
-                            renderHeight = imageSize / aspectRatio;
-                        } else {
-                            // Imagen vertical
-                            renderWidth = imageSize * aspectRatio;
+                        // Verificar si necesitamos nueva página
+                        if (y + imageSize > pageHeight - margin) {
+                            doc.addPage();
+                            y = 30;
+                            x = startX;
                         }
                         
-                        // Calcular posición centrada dentro del área 7x7 cm
-                        const offsetX = x + (imageSize - renderWidth) / 2;
-                        const offsetY = y + (imageSize - renderHeight) / 2;
-                        
-                        // Agregar imagen al PDF
-                        doc.addImage({
-                            imageData: photo.src,
-                            x: offsetX,
-                            y: offsetY,
-                            width: renderWidth,
-                            height: renderHeight
-                        });
-                        
-                        // Borde del área de 7x7 cm
-                        doc.rect(x, y, imageSize, imageSize);
-                        
-                        // Número de foto
-                        doc.setFontSize(8);
-                        doc.text(`Foto ${index}`, x + imageSize/2, y + imageSize + 5, { align: 'center' });
-                        
-                        // Actualizar posición para siguiente imagen
-                        photoIndex++;
-                        if (photoIndex % imagesPerRow === 0) {
-                            x = startX;
-                            y += imageSize + spacing + 15; // Espacio para el número
-                        } else {
-                            x += imageSize + spacing;
-                        }
-                        
-                    } catch (error) {
-                        console.error(`Error procesando foto ${index}:`, error);
-                        // Continuar con la siguiente foto
-                        photoIndex++;
-                        if (photoIndex % imagesPerRow === 0) {
-                            x = startX;
-                            y += imageSize + spacing + 15;
-                        } else {
-                            x += imageSize + spacing;
+                        try {
+                            // Convertir data URL a Image object
+                            const img = await loadImage(photo.src);
+                            
+                            // Calcular dimensiones manteniendo proporción
+                            const aspectRatio = img.width / img.height;
+                            let renderWidth = imageSize;
+                            let renderHeight = imageSize;
+                            
+                            if (aspectRatio > 1) {
+                                // Imagen horizontal
+                                renderHeight = imageSize / aspectRatio;
+                            } else {
+                                // Imagen vertical
+                                renderWidth = imageSize * aspectRatio;
+                            }
+                            
+                            // Calcular posición centrada dentro del área 7x7 cm
+                            const offsetX = x + (imageSize - renderWidth) / 2;
+                            const offsetY = y + (imageSize - renderHeight) / 2;
+                            
+                            // Agregar imagen al PDF sin borde
+                            doc.addImage({
+                                imageData: photo.src,
+                                x: offsetX,
+                                y: offsetY,
+                                width: renderWidth,
+                                height: renderHeight
+                            });
+                            
+                            // Actualizar posición para siguiente imagen
+                            photoCount++;
+                            if (photoCount % imagesPerRow === 0) {
+                                x = startX;
+                                y += imageSize + spacing;
+                            } else {
+                                x += imageSize + spacing;
+                            }
+                            
+                        } catch (error) {
+                            console.error(`Error procesando foto:`, error);
+                            // Continuar con la siguiente foto
+                            photoCount++;
+                            if (photoCount % imagesPerRow === 0) {
+                                x = startX;
+                                y += imageSize + spacing;
+                            } else {
+                                x += imageSize + spacing;
+                            }
                         }
                     }
                 }
@@ -762,9 +783,9 @@
         
         // Generar archivo ZIP con el número de contrato como nombre
         function generateZipFile() {
-            const photoCount = photos.filter(photo => photo !== null).length;
+            const totalPhotos = photos.flat().length;
             
-            if (photoCount === 0) {
+            if (totalPhotos === 0) {
                 showStatus('No hay fotos para comprimir', 'error');
                 return;
             }
@@ -786,235 +807,31 @@
             // Crear carpeta con el número de contrato
             const imgFolder = zip.folder(validFileName);
             
-            // Agregar cada foto al ZIP
-            photos.forEach((photo, index) => {
-                if (photo) {
-                    // Convertir data URL a blob
-                    const blob = dataURLToBlob(photo.src);
-                    imgFolder.file(`foto_${index + 1}.jpg`, blob);
-                }
+            // Contador para numerar las imágenes secuencialmente
+            let imageCounter = 1;
+            
+            // Agregar cada foto al ZIP con el nuevo formato de nombre
+            photos.forEach((photoGroup, groupIndex) => {
+                photoGroup.forEach((photo, photoIndex) => {
+                    if (photo) {
+                        // Convertir data URL a blob
+                        const blob = dataURLToBlob(photo.src);
+                        
+                        // Nuevo formato de nombre: "234561 (1)", "234561 (2)", etc.
+                        const fileName = `${contractNumber} (${imageCounter}).jpg`;
+                        imgFolder.file(fileName, blob);
+                        
+                        imageCounter++;
+                    }
+                });
             });
             
             // Generar y descargar el ZIP
             zip.generateAsync({type:"blob"}).then(function(content) {
                 saveAs(content, `${validFileName}.zip`);
-                showStatus(`Archivo ZIP "${validFileName}.zip" generado correctamente`, 'success');
+                showStatus(`Carpeta de imagenes "${validFileName}.zip" generada correctamente`, 'success');
             });
         }
-
-        // // NUEVA FUNCIÓN: Compartir por WhatsApp
-        // async function shareViaWhatsApp() {
-        //     const photoCount = photos.filter(photo => photo !== null).length;
-        //     const contractNumber = contractNumberInput.value.trim();
-            
-        //     if (photoCount === 0) {
-        //         showStatus('No hay fotos para compartir', 'error');
-        //         return;
-        //     }
-            
-        //     if (!contractNumber) {
-        //         showStatus('Por favor ingresa el número de contrato', 'error');
-        //         contractNumberInput.focus();
-        //         return;
-        //     }
-
-        //     try {
-        //         showStatus('Preparando archivo para WhatsApp...', 'success');
-                
-        //         // Generar el ZIP primero
-        //         const zipBlob = await generateZipBlob();
-                
-        //         // Crear un objeto File desde el Blob
-        //         const file = new File([zipBlob], `${contractNumber}.zip`, { type: 'application/zip' });
-                
-        //         // Crear una URL para el archivo
-        //         const fileUrl = URL.createObjectURL(file);
-                
-        //         // Crear enlace de WhatsApp
-        //         const message = `Expediente de fotos - Contrato ${contractNumber}`;
-        //         const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-                
-        //         // Crear enlace de descarga temporal
-        //         const tempLink = document.createElement('a');
-        //         tempLink.href = fileUrl;
-        //         tempLink.download = `${contractNumber}.zip`;
-        //         document.body.appendChild(tempLink);
-                
-        //         // Primero descargar el archivo localmente
-        //         tempLink.click();
-                
-        //         // Luego abrir WhatsApp
-        //         setTimeout(() => {
-        //             window.open(whatsappUrl, '_blank');
-        //             showStatus('Archivo listo para compartir por WhatsApp', 'success');
-        //         }, 1000);
-                
-        //         // Limpiar
-        //         setTimeout(() => {
-        //             document.body.removeChild(tempLink);
-        //             URL.revokeObjectURL(fileUrl);
-        //         }, 5000);
-                
-        //     } catch (error) {
-        //         console.error('Error compartiendo por WhatsApp:', error);
-        //         showStatus('Error al compartir por WhatsApp', 'error');
-        //     }
-        // }
-
-
-        // FUNCIÓN MEJORADA: Compartir por WhatsApp
-        async function shareViaWhatsApp() {
-            const photoCount = photos.filter(photo => photo !== null).length;
-            const contractNumber = contractNumberInput.value.trim();
-            
-            if (photoCount === 0) {
-                showStatus('No hay fotos para compartir', 'error');
-                return;
-            }
-            
-            if (!contractNumber) {
-                showStatus('Por favor ingresa el número de contrato', 'error');
-                contractNumberInput.focus();
-                return;
-            }
-
-            try {
-                showStatus('Preparando envío a WhatsApp...', 'success');
-                
-                // Generar el ZIP
-                const zipBlob = await generateZipBlob();
-                const fileName = `${contractNumber}.zip`;
-                const file = new File([zipBlob], fileName, { type: 'application/zip' });
-                
-                // INTENTO 1: Web Share API (funciona en Android Chrome, iOS Safari)
-                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                    await navigator.share({
-                        title: `Expediente ${contractNumber}`,
-                        text: `Expediente de fotos - Contrato ${contractNumber}`,
-                        files: [file]
-                    });
-                    showStatus('¡Archivo enviado por WhatsApp!', 'success');
-                    return;
-                }
-                
-                // INTENTO 2: WhatsApp API con enlace de descarga directa
-                await sendViaWhatsAppAPI(file, contractNumber);
-                
-            } catch (error) {
-                console.error('Error compartiendo por WhatsApp:', error);
-                // INTENTO 3: Método de respaldo
-                await backupWhatsAppMethod(contractNumber);
-            }
-        }
-
-        // INTENTO 2: Crear enlace de descarga y enviar por WhatsApp
-        async function sendViaWhatsAppAPI(file, contractNumber) {
-            // Crear URL temporal para el archivo
-            const fileUrl = URL.createObjectURL(file);
-            
-            // En dispositivos móviles, intentamos usar el esquema de WhatsApp
-            if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-                const message = `📁 Expediente de Fotos - Contrato ${contractNumber}\n\nDescarga el archivo aquí: ${fileUrl}`;
-                const whatsappUrl = `whatsapp://send?text=${encodeURIComponent(message)}`;
-                
-                // Intentar abrir la app de WhatsApp
-                window.location.href = whatsappUrl;
-                
-                // Descargar también localmente por si falla
-                downloadFile(file, `${contractNumber}.zip`);
-                
-                showStatus('Abriendo WhatsApp... Adjunta el archivo descargado.', 'success');
-            } else {
-                // En desktop, abrir WhatsApp Web
-                await backupWhatsAppMethod(contractNumber);
-            }
-            
-            // Limpiar después de 30 segundos
-            setTimeout(() => URL.revokeObjectURL(fileUrl), 30000);
-        }
-
-        // INTENTO 3: Método de respaldo - Descargar y abrir WhatsApp
-        async function backupWhatsAppMethod(contractNumber) {
-            // Generar ZIP nuevamente por seguridad
-            const zipBlob = await generateZipBlob();
-            
-            // Descargar archivo
-            downloadFile(zipBlob, `${contractNumber}.zip`);
-            
-            // Esperar a que se complete la descarga
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            
-            // Crear mensaje para WhatsApp
-            const message = `📁 *EXPEDIENTE DE FOTOS* 📷\n\n` +
-                        `📍 *Contrato:* ${contractNumber}\n` +
-                        `📦 *Archivo:* ${contractNumber}.zip\n\n` +
-                        `_El archivo ZIP se ha descargado automáticamente. Por favor, ábrelo desde tus descargas y adjúntalo a este chat._`;
-            
-            // Abrir WhatsApp
-            const whatsappUrl = `https://web.whatsapp.com/send?text=${encodeURIComponent(message)}`;
-            window.open(whatsappUrl, '_blank');
-            
-            showStatus('Archivo descargado. Abriendo WhatsApp...', 'success');
-        }
-
-        // Función auxiliar para descargar archivo
-        function downloadFile(blob, fileName) {
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = fileName;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            // Limpiar después de un tiempo
-            setTimeout(() => URL.revokeObjectURL(url), 30000);
-        }
-
-        // Función auxiliar para generar el ZIP y devolver el Blob
-        function generateZipBlob() {
-            return new Promise((resolve, reject) => {
-                const contractNumber = contractNumberInput.value.trim();
-                const validFileName = contractNumber.replace(/[^a-zA-Z0-9-_]/g, '_');
-                
-                const zip = new JSZip();
-                const imgFolder = zip.folder(validFileName);
-                
-                // Agregar cada foto al ZIP
-                photos.forEach((photo, index) => {
-                    if (photo) {
-                        const blob = dataURLToBlob(photo.src);
-                        imgFolder.file(`foto_${index + 1}.jpg`, blob);
-                    }
-                });
-                
-                // Generar el Blob
-                zip.generateAsync({type: "blob"}).then(resolve).catch(reject);
-            });
-        }
-
-
-        // // Función auxiliar para generar el ZIP y devolver el Blob
-        // function generateZipBlob() {
-        //     return new Promise((resolve, reject) => {
-        //         const contractNumber = contractNumberInput.value.trim();
-        //         const validFileName = contractNumber.replace(/[^a-zA-Z0-9-_]/g, '_');
-                
-        //         const zip = new JSZip();
-        //         const imgFolder = zip.folder(validFileName);
-                
-        //         // Agregar cada foto al ZIP
-        //         photos.forEach((photo, index) => {
-        //             if (photo) {
-        //                 const blob = dataURLToBlob(photo.src);
-        //                 imgFolder.file(`foto_${index + 1}.jpg`, blob);
-        //             }
-        //         });
-                
-        //         // Generar el Blob
-        //         zip.generateAsync({type: "blob"}).then(resolve).catch(reject);
-        //     });
-        // }
         
         // Convertir data URL a Blob
         function dataURLToBlob(dataURL) {
@@ -1037,14 +854,16 @@
         
         // Guardar fotos en localStorage
         function savePhotosToStorage() {
-            const photosToSave = photos.map(photo => {
-                if (photo) {
-                    return {
-                        src: photo.src,
-                        name: photo.name
-                    };
-                }
-                return null;
+            const photosToSave = photos.map(photoGroup => {
+                return photoGroup.map(photo => {
+                    if (photo) {
+                        return {
+                            src: photo.src,
+                            name: photo.name
+                        };
+                    }
+                    return null;
+                }).filter(photo => photo !== null);
             });
             localStorage.setItem('expedientePhotos', JSON.stringify(photosToSave));
         }
@@ -1061,14 +880,14 @@
             const savedPhotos = localStorage.getItem('expedientePhotos');
             if (savedPhotos) {
                 const parsedPhotos = JSON.parse(savedPhotos);
-                parsedPhotos.forEach((photo, index) => {
-                    if (photo) {
-                        photos[index] = {
+                parsedPhotos.forEach((photoGroup, index) => {
+                    if (photoGroup && photoGroup.length > 0) {
+                        photos[index] = photoGroup.map(photo => ({
                             src: photo.src,
                             name: photo.name,
-                            file: null // No podemos guardar el objeto File completo
-                        };
-                        renderImagePreview(index, photo.src);
+                            file: null
+                        }));
+                        renderImagePreview(index);
                     }
                 });
                 updateActionButtons();
