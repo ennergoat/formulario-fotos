@@ -364,6 +364,38 @@
             }
         }
 
+        .update-notification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--secondary);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            display: none;
+            flex-direction: row;
+            align-items: center;
+            gap: 15px;
+            z-index: 1000;
+        }
+
+        .update-notification p {
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        .update-notification button {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
 
     </style>
 </head>
@@ -404,6 +436,11 @@
         </section>
         
         <div class="status-message" id="statusMessage"></div>
+
+        <div id="update-notification" class="update-notification">
+            <p>Hay una nueva versión disponible</p>
+            <button id="update-btn">Actualizar</button>
+        </div>
         
         <section class="instructions">
             <h2><i class="fas fa-info-circle"></i> Instrucciones</h2>
@@ -901,10 +938,55 @@
                 navigator.serviceWorker.register('/sw.js')
                     .then(registration => {
                         console.log('Service Worker registrado: ', registration);
+                        
+                        // Detectar si hay actualización esperando
+                        if (registration.waiting) {
+                             showUpdateNotification();
+                        }
+
+                        registration.onupdatefound = () => {
+                            const installingWorker = registration.installing;
+                            installingWorker.onstatechange = () => {
+                                if (installingWorker.state === 'installed') {
+                                    if (navigator.serviceWorker.controller) {
+                                        // Nueva actualización disponible
+                                        console.log('Nueva actualización disponible');
+                                        showUpdateNotification();
+                                    } else {
+                                        // Contenido cacheado para uso offline
+                                        console.log('Contenido cacheado para uso offline');
+                                        showStatus('Aplicación lista para usar sin conexión', 'success');
+                                    }
+                                }
+                            };
+                        };
                     })
                     .catch(registrationError => {
                         console.log('Error en el registro del Service Worker: ', registrationError);
                     });
+                
+                // Recargar cuando el nuevo SW tome el control
+                let refreshing;
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    if (refreshing) return;
+                    window.location.reload();
+                    refreshing = true;
+                });
+            });
+        }
+        
+        function showUpdateNotification() {
+            const notification = document.getElementById('update-notification');
+            const btn = document.getElementById('update-btn');
+            
+            notification.style.display = 'flex';
+            
+            btn.addEventListener('click', () => {
+                // Forzar recarga, el SW nuevo ya debería haber hecho skipWaiting()
+                // o podemos enviar mensaje si fuera necesario, pero con skipWaiting() automático
+                // en sw.js, solo recargar debería bastar si el SW ya está activado.
+                // Si no está activado automáticamente, window.location.reload() activará el waiting.
+                 window.location.reload();
             });
         }
         
